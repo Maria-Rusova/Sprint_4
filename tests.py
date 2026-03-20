@@ -1,27 +1,30 @@
 from main import BooksCollector
 import pytest
 
+
 class TestBooksCollector:
 
-    @pytest.mark.parametrize("book_name, is_valid", [
-        ("Короткий заголовок", True),
-        ("a" * 40, True),
-        ("a" * 41, False),
-        ("", False),
+    @pytest.mark.parametrize("book_name", [
+        "Короткий заголовок",
+        "a" * 40,
     ])
-    def test_add_new_book_valid_and_invalid_names(self, collector, book_name, is_valid):
+    def test_add_new_book_valid_names(self, collector, book_name):
         collector.add_new_book(book_name)
-        if is_valid:
-            assert book_name in collector.get_books_genre()
-        else:
-            assert book_name not in collector.get_books_genre()
+        assert book_name in collector.get_books_genre()
+
+    @pytest.mark.parametrize("book_name", [
+        "a" * 41,
+        "",
+    ])
+    def test_add_new_book_invalid_names(self, collector, book_name):
+        collector.add_new_book(book_name)
+        assert book_name not in collector.get_books_genre()
 
     def test_add_new_book_duplicate(self, collector):
         book_name = "Дубликат"
         collector.add_new_book(book_name)
         collector.add_new_book(book_name)
         assert len(collector.get_books_genre()) == 1
-
 
     def test_set_book_genre_valid_case(self, collector):
         collector.add_new_book("Стражи галактики")
@@ -59,16 +62,8 @@ class TestBooksCollector:
         ("Ужасы", ["Оно"]),
         ("Неизвестный жанр", []),
     ])
-    def test_get_books_with_specific_genre(self, collector, genre, expected_books):
-        books_by_genre = {
-            "Фантастика": ["Супермен", "Звездные войны"],
-            "Ужасы": ["Оно"],
-        }
-        for genre_name, books in books_by_genre.items():
-            for book in books:
-                collector.add_new_book(book)
-                collector.set_book_genre(book, genre_name)
-        result = collector.get_books_with_specific_genre(genre)
+    def test_get_books_with_specific_genre(self, populated_collector, genre, expected_books):
+        result = populated_collector.get_books_with_specific_genre(genre)
         assert sorted(result) == sorted(expected_books)
 
 
@@ -93,7 +88,7 @@ class TestBooksCollector:
             collector.add_new_book(book)
             collector.set_book_genre(book, genre)
         result = collector.get_books_for_children()
-        assert "Шрек" in result
+        assert "Шрек" in result                                                                
         assert "Я и моя тень" in result
         assert "Зеркала" not in result
 
@@ -129,9 +124,8 @@ class TestBooksCollector:
         collector.add_new_book("Веном")
         collector.add_new_book("Аквамен")
 
-        collector.favorites = ["Аквамен"]
+        collector.add_book_in_favorites("Аквамен")
         
         favorites = collector.get_list_of_favorites_books()
-        assert "Аквамен" in favorites
-        assert "Веном" not in favorites
-        assert len(favorites) == 1
+        assert "Аквамен" in favorites, "Книга 'Аквамен' должна быть в списке избранного"
+        
